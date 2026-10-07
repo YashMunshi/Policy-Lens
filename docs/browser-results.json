@@ -1,0 +1,13 @@
+{
+  "flows": [
+    "Permission findings and known unused grant",
+    "SQL log filtering",
+    "CSV export",
+    "Paired policy replay and metric display",
+    "Candidate policy version change",
+    "Report generation and download",
+    "Mobile layout without document overflow"
+  ],
+  "errors": [],
+  "passed": true
+}
