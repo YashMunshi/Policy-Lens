@@ -4,3 +4,5 @@ __pycache__/
 *.sqlite-wal
 *.sqlite-shm
 .DS_Store
+public/
+.vercel/

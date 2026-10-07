@@ -1,0 +1,50 @@
+/* Optional Playwright check: BASE_URL=<hosted URL> node tests/hosted-browser.cjs */
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+  try{
+    const context=await browser.newContext(), page=await context.newPage(), errors=[];
+    page.on('pageerror',e=>errors.push(e.message));
+    const base=process.env.BASE_URL||'http://127.0.0.1:8777';
+    await page.goto(base);
+    await page.getByRole('heading',{name:'Unused permissions',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Policy validation',exact:true}).click();
+    await page.locator('#department_boundary').uncheck();
+    await page.getByRole('button',{name:'Save policy version',exact:true}).click();
+    await page.getByText('Candidate version saved. No live permissions changed.').waitFor();
+    await page.getByRole('button',{name:'Run paired replay',exact:true}).click();
+    await page.getByText('Paired replay complete.').waitFor();
+    let values=await page.locator('tr').filter({hasText:'False allows'}).locator('td').allTextContents();
+    assert.equal(values[1],'529');assert.ok(Number(values[2])>529);
+    await page.reload();
+    await page.getByRole('heading',{name:'Unused permissions',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Policy validation',exact:true}).click();
+    assert.equal(await page.locator('#department_boundary').isChecked(),false);
+    const other=await browser.newContext(), fresh=await other.newPage();
+    await fresh.goto(base);await fresh.getByRole('heading',{name:'Unused permissions',exact:true}).waitFor();
+    await fresh.getByRole('button',{name:'Policy validation',exact:true}).click();
+    assert.equal(await fresh.locator('#department_boundary').isChecked(),true);
+    await page.locator('#department_boundary').check();
+    await page.getByRole('button',{name:'Save policy version',exact:true}).click();
+    await page.getByText('Candidate version saved. No live permissions changed.').waitFor();
+    await page.getByRole('button',{name:'Run paired replay',exact:true}).click();
+    await page.getByText('Paired replay complete.').waitFor();
+    values=await page.locator('tr').filter({hasText:'False allows'}).locator('td').allTextContents();assert.equal(values[2],'0');
+    await page.getByRole('button',{name:'Review report',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelector('#report-text')?.textContent.includes('Candidate false allows: 0'));
+    await page.getByRole('button',{name:'Access logs',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelector('#log-count')?.textContent.includes('2400'));
+    await page.locator('#principal').selectOption('report-service');
+    await page.getByRole('button',{name:'Filter logs',exact:true}).click();
+    await page.waitForFunction(()=>{const rows=[...document.querySelectorAll('#log-results tbody tr')];return rows.length>0&&rows.every(row=>row.textContent.includes('report-service'));});
+    const dl=page.waitForEvent('download');await page.getByRole('button',{name:'Download all logs · CSV',exact:true}).click();await dl;
+    await page.getByRole('button',{name:'Reset demo',exact:true}).click();
+    await page.getByRole('heading',{name:'Unused permissions',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('policy-lens-demo')).runs),0);
+    await page.setViewportSize({width:390,height:844});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    assert.deepEqual(errors,[]);
+    console.log('PASS hosted browser: load, policy replay, refresh persistence, visitor isolation, restoration, report, logs, CSV, reset, mobile; no page errors');
+  }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exit(1)});

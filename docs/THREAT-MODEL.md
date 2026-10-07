@@ -35,3 +35,15 @@ production identity provider, MFA, TLS, immutable evidence retention, or distrib
 rate limiting. Audit utilities are ordinary local SQLite records. A production
 analyst service would need trusted log ingestion, identity integration, protected
 evidence storage, transport encryption, monitoring, and operational hardening.
+
+## Hosted public-demo boundary
+The hosted adapter deliberately exposes only deterministic synthetic analysis.
+It provides no production authentication, tenant administration, external data
+import, or live permission mutation. No sign-in is required. Validated browser
+settings reconstruct request-local databases; they are not authorization tokens.
+No shared policy state or durable server database exists. Cross-origin requests
+are rejected, API responses are not cached, inputs are bounded and validated,
+and queries remain parameterized. Clearing localStorage resets visitor state.
+Replay timing can vary between reconstructed requests. Rate limiting and resource
+protection at the edge are supplied by the hosting platform; localhost login-rate
+limits and session revocation are not represented as hosted-demo features.
