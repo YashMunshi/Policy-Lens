@@ -7,6 +7,7 @@ output = root / 'public'
 output.mkdir(exist_ok=True)
 for name in ('index.html', 'style.css', 'favicon.svg'):
     shutil.copyfile(root / 'web' / name, output / name)
+shutil.copytree(root / 'web' / 'fonts', output / 'fonts', dirs_exist_ok=True)
 source = (root / 'web' / 'app.js').read_text()
 start = source.index('async function api(')
 end = source.index('\nfunction run(', start)
