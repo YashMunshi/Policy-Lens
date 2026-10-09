@@ -1,16 +1,66 @@
-# Policy Lens — Access Policy Analysis and Validation Lab
+# Policy Lens · Access Analysis Lab
 
 Analyze access logs, review permission usage, and measure the consequences of
 proposed access policies. This project complements implementation of IAM controls
 by focusing on **evidence, SQL analysis, and policy validation**.
 
-![Policy Lens analysis workspace](docs/workspace.png)
+**[Open the live demo](https://policy-lens-kappa.vercel.app/)** · [GitHub repository](https://github.com/YashMunshi/Policy-Lens)
 
-## Run
+The public demo runs in your browser without installation or sign-in. All access
+logs, identities, permissions, and desired-policy labels are synthetic. It is a
+portfolio lab for exploring IAM evidence and testing proposed access policies.
+
+## Understanding the evidence collection
+
+The sidebar summarizes the dataset used throughout the app:
+
+| Label | Meaning |
+|---|---|
+| Northstar | A fictional organization used to name the demo dataset; no connection to a real company. |
+| 30 days / 30-day synthetic window | The fixed observation period represented by the generated access events. It is not live monitoring or a countdown. |
+| 12 human and service identities | Twelve fictional principals, including human users and service accounts. |
+| Settings stay in this browser | In the hosted demo, candidate controls, policy version, replay count, and last replay policy are stored in this browser's local storage. |
+
+The fixture contains **2,400 access events**, generated with seed **412469**.
+Your settings are sent to the API to validate and reconstruct your analysis on
+each request. Each request uses a disposable SQLite database; there is no shared
+persistent policy database between visitors. Clearing site data or selecting
+**Reset demo** restores the default settings. Settings do not sync across browsers
+or devices, and browser-provided state is not trusted as authorization or as
+precomputed evaluation evidence.
+
+## Analysis workspace
+
+| Tab | Purpose |
+|---|---|
+| Permission findings | Review unused grants, cross-department access, sensitive exports, and unusual access volume with supporting evidence. |
+| Access logs | Filter access events by identity and observed decision, then export the full dataset as CSV. |
+| Policy validation | Save candidate controls and replay the same events to compare false allows, false denies, precision, recall, and changed decisions. |
+| Review report | Read and download a Markdown report containing findings, evidence, evaluation results, proposed review actions, and limitations. |
+
+The interface pairs self-hosted **Source Serif 4** headings with **IBM Plex Sans**
+for navigation, controls, and data. A deep blue, warm paper, and copper palette,
+compact corners, crisp borders, and split-pane layouts support evidence review.
+Navigation, data tables, form controls, and report text use larger, readable type.
+Font license notices are included in `web/fonts/`.
+
+## Hosted and local modes
+
+| Mode | Access and state |
+|---|---|
+| Public Vercel demo | No sign-in. Browser-local analysis settings; a stateless Python function rebuilds the synthetic fixture for each request. |
+| Local analyst workspace | Demo login, session and CSRF protections, analyst authorization, and a local SQLite database. |
+
+Both modes analyze fictional data. Policy replay computes proposed decisions; it
+does not grant employee access or change permissions on a live service.
+
+## Run locally
 
 Requires **Python 3.10+**. No packages, API keys, Docker, or paid services.
 
 ```bash
+git clone https://github.com/YashMunshi/Policy-Lens.git
+cd Policy-Lens
 python3 app.py
 ```
 
@@ -92,33 +142,53 @@ Evidence: [evaluation JSON](docs/evaluation.json), [findings](docs/findings.json
 python3 -m unittest discover -s tests -v
 ```
 
-**23 independent tests passed**, including real HTTP tests for login, session
-invalidation, CSRF, origin checks, and analyst authorization, plus analysis tests
-for known findings, filters, reproducibility, policy impact, CSV/report exports,
-and no live mutation. Test servers temporarily use port 18767.
+The Python suite contains **30 tests**: 23 local security and analysis tests,
+plus 7 hosted-adapter tests. Coverage includes login, session invalidation, CSRF,
+origin checks, analyst authorization, known findings, filtering, reproducibility,
+policy impact, exports, state validation, and visitor isolation.
+Test servers temporarily use port 18767.
 
-**Seven Chromium browser flows passed**, covering findings, SQL filtering,
-CSV export, replay, version changes, report generation/download, and a 390-pixel
-mobile viewport without document-level horizontal overflow. No JavaScript page
-errors were recorded. `tests/browser-check.cjs` is optional; it requires Playwright
-and Chromium, which are not needed to run the app.
+Optional browser checks are in `tests/browser-check.cjs` and
+`tests/hosted-browser.cjs`. They require Playwright and Chromium; neither is needed
+to run the app. The published interface has been checked for policy replay,
+log filtering, report output, and a CSV export containing all 2,400 events.
 
 GitHub Actions runs the Python suite on Python 3.10 and 3.12. Runtime databases,
 session secrets, and caches are excluded from Git. Stop the server before deleting
 `demo.sqlite` and its WAL/SHM companions to reset the fixture.
 
-## Repository structure
+## Tools and repository structure
+
+Runtime: **Python, SQLite, HTML, CSS, and vanilla JavaScript**. The application uses
+Python's standard library and has no third-party JavaScript runtime dependencies.
+Hosting and automation: **GitHub, GitHub Actions, and Vercel**.
 
 - `app.py`: data generation, SQL analysis, replay, report, and routing.
-- `core.py`: local HTTP/session utilities.
-- `web/`: responsive analyst UI without third-party browser dependencies.
-- `tests/`: independent tests and optional browser check.
-- `docs/`: screenshots, sample data, evaluation evidence, design, and publishing guide.
+- `core.py`: local HTTP and session utilities.
+- `api/index.py`: public, stateless Vercel Python function and demo-state validation.
+- `build.py`: builds the hosted frontend into `public/`.
+- `vercel.json`: build command, output directory, API rewrites, and security headers.
+- `web/`: analyst UI and self-hosted fonts with license notices.
+- `tests/`: Python tests and optional browser checks.
+- `docs/`: sample data, evaluation evidence, security design, and publishing guide.
 
-## Publish
+## Deployment
 
-Suggested repository: **YashMunshi/policy-lens**.
-See [publishing instructions](docs/PUBLISHING.md). GitHub hosts the source, not this
-Python backend; GitHub Pages cannot run the application.
+The repository is connected to Vercel. Changes pushed to `main` trigger a
+production deployment at [policy-lens-kappa.vercel.app](https://policy-lens-kappa.vercel.app/).
 
-Read [the security design](docs/THREAT-MODEL.md) before adapting beyond localhost.
+The included configuration uses:
+
+| Setting | Value |
+|---|---|
+| Framework preset | Other (`framework: null`) |
+| Build command | `python3 build.py` |
+| Output directory | `public` |
+| Backend | `api/index.py`, a Vercel Python function |
+
+No API keys or database credentials are required for the synthetic demo.
+GitHub hosts the source; Vercel serves the frontend and Python API.
+GitHub Pages cannot run this backend.
+
+Read [the security design](docs/THREAT-MODEL.md) before adapting beyond the demo.
+Additional repository setup steps are in [publishing instructions](docs/PUBLISHING.md).
