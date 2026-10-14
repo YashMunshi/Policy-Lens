@@ -183,7 +183,8 @@ def serve(application, directory, port):
                 name = 'index.html' if name == '/' else name.lstrip('/')
                 if name not in ('index.html','app.js','style.css','favicon.svg',
                                 'fonts/plex-regular.woff','fonts/plex-medium.woff',
-                                'fonts/plex-semibold.woff','fonts/source-serif.woff'):
+                                'fonts/plex-semibold.woff','fonts/source-serif.woff',
+                                'fonts/dm-sans-latin-variable.woff','fonts/newsreader-latin-variable.woff'):
                     raise Problem(404,'Not found.')
                 file = root/name
                 data = file.read_bytes()

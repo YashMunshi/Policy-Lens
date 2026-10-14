@@ -38,10 +38,12 @@ precomputed evaluation evidence.
 | Policy validation | Save candidate controls and replay the same events to compare false allows, false denies, precision, recall, and changed decisions. |
 | Review report | Read and download a Markdown report containing findings, evidence, evaluation results, proposed review actions, and limitations. |
 
-The interface pairs self-hosted **Source Serif 4** headings with **IBM Plex Sans**
+The interface pairs self-hosted **Newsreader** headings with **DM Sans**
 for navigation, controls, and data. A deep blue, warm paper, and copper palette,
 compact corners, crisp borders, and split-pane layouts support evidence review.
-Navigation, data tables, form controls, and report text use larger, readable type.
+Body text is 18px; table content, controls, and supporting text are 16px;
+technical labels are 15px. Narrow workspaces reflow evidence into labeled rows,
+and mobile navigation uses two columns.
 Font license notices are included in `web/fonts/`.
 
 ## Hosted and local modes
